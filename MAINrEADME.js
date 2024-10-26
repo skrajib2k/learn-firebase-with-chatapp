@@ -226,3 +226,43 @@ useEffect(()=>{
 const handleUserListToChatSelect=(chat)=>{
     cgangeChat(chat.chatId,chat.user)
 }
+
+
+
+const handleMessageSend=async()=>{
+  if(text==="")return;
+  try {
+    const userIds= [currentUser.id,user.id]
+    userIds.forEach(async(id)=>{
+
+ 
+    
+    await updateDoc(doc(db,'chats',{
+      messages:arrayUnion({
+        senderId:currentUser.id,
+        text,
+        createdAt: new Date()
+      })
+    }))
+
+    // 
+    const userChatsRef = doc(db,"userchats",id);
+    const userChatSnapShort = await getDoc(userChatsRef)
+
+    if(userChatSnapShort.exists()){
+      const userChatsData = userChatSnapShort.data;
+      const chatIndex = userChatsData.chats.findIndex((c)=>c.chatId===chatId)
+
+      userChatsData.chats[chatIndex].lastMessage=text;
+      userChatsData.chats[chatIndex].isSeen=id===currentUser.id?true:false;
+      userChatsData.chats[chatIndex].updatedAt=Date.now();
+
+      await updateDoc(userChatsRef,{
+        chats:userChatsData.chats,
+      })
+    }
+  })
+  } catch (error) {
+    console.log(error);
+  }
+}
